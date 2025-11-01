@@ -9,6 +9,8 @@ export class DocumentQueryFactory {
     switch (type) {
       case "general":
         return new GeneralDocumentQueryService();
+      case "invoice":
+        return new InvoiceDocsQueryService();
       default:
         throw new Error("Unsupported document query service type");
     }

@@ -1,32 +1,32 @@
 import { Request, Response } from "express";
-import GeneralModel from "./models/general-model";
-import TextProcessingService from "./services/chunk/text-processor-service";
+import { DocumentQueryFactory } from "./services/document/document-query";
 import DocumentService from "./services/document/document-service";
 import DocumentProcessingService from "./services/document/document-service-impl";
 import EmbeddingLoaderService from "./services/embedding/embedding-loader-service";
-import { DocumentQueryFactory } from "./services/document/document-query";
+import { readFile } from "fs/promises";
 
 class Controller {
   private documentService: DocumentService;
-  private textProcessingService: TextProcessingService;
   constructor() {
     this.documentService = new DocumentProcessingService();
-    this.textProcessingService = new TextProcessingService();
   }
   public getHealth(_: Request, res: Response) {
     return res.send("Hello, World!");
   }
   public async upload(req: Request, res: Response) {
     const file = req.file;
-    const typeOfDoc = req.body?.type || "general";
+    if (!file) throw new Error("No file provided");
+    const typeOfDoc = (req.query?.type as string) || "general";
     const { mimeType } = this.documentService.validateDocument(
       file as Express.Multer.File
     );
-    const processor = this.documentService.loadDocumentProccessor(mimeType);
-    const text = await processor.parseBufferToText(file?.buffer as Buffer);
+    const processor = this.documentService.loadDocumentProccessor(
+      mimeType,
+      typeOfDoc
+    );
+    const buffer = await readFile(file?.path);
+    const chunks = await processor.parseBufferToChunks(buffer);
     const llmService = EmbeddingLoaderService.loadEmbeddingService("ollama");
-    
-    const chunks = this.textProcessingService.getChunks(text);
     const embeddings = await llmService.generateEmbeddings(chunks);
     await this.documentService.uploadDocument({
       mimeType,
@@ -44,9 +44,12 @@ class Controller {
     const typeOfDoc = (req.query?.type as string) || "general";
     const llmService = EmbeddingLoaderService.loadEmbeddingService("ollama");
     const queryEmbedding = await llmService.generateQueryEmbedding(search);
-    const documentQueryService = DocumentQueryFactory.getDocumentQueryService(typeOfDoc);
+    const documentQueryService =
+      DocumentQueryFactory.getDocumentQueryService(typeOfDoc);
     const results = await documentQueryService.query(queryEmbedding, 10);
-    return res.json(results);
+    return res.json({
+      data: results,
+    });
   }
 }
 

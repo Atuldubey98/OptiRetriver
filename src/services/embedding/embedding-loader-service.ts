@@ -1,4 +1,4 @@
-import { IEmbeddingCreateService, GeneralModelEmbeddingCreateService } from "./embedding-create";
+import { IEmbeddingCreateService, GeneralModelEmbeddingCreateService, InvoiceModelEmbeddingCreateService } from "./embedding-create";
 import EmbeddingStrategy from "./embedding-strategy";
 import OllamaEmbeddingStrategyImpl from "./ollama-embedding";
 
@@ -13,6 +13,9 @@ class EmbeddingLoaderService {
     public static getEmbeddingCreateService(typeOfDoc : string) : IEmbeddingCreateService{
         if(typeOfDoc === "general"){
             return new GeneralModelEmbeddingCreateService();
+        }
+        if(typeOfDoc === "invoice"){
+            return new InvoiceModelEmbeddingCreateService();
         }
         throw new Error(`Embedding Create Service for ${typeOfDoc} not supported`);
     }

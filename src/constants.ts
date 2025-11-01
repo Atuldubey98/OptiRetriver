@@ -5,3 +5,7 @@ export const generalDocModel = {
   embeddings: { type: [Number], required: true },
   entity: { type: mongoose.Schema.ObjectId, required: true, ref: "entity" },
 };
+
+export const supportedMimeTypes = [
+  "application/pdf",
+];

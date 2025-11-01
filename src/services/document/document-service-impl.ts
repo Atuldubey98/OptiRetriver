@@ -3,6 +3,7 @@ import TextProcessingService from "../chunk/text-processor-service";
 import { IEmbeddingCreateService } from "../embedding/embedding-create";
 import IDocumentService from "./document-service";
 import GeneralProcessor from "./general-processor";
+import { InvoiceProcessor } from "./invoice-processor";
 
 class DocumentService implements IDocumentService {
   private textProcessorService: TextProcessingService;
@@ -48,12 +49,19 @@ class DocumentService implements IDocumentService {
     }
   }
 
-  loadDocumentProccessor(mimeType: string): DocumentProcessor {
-    switch (mimeType) {
-      case "application/pdf":
+  loadDocumentProccessor(
+    mimeType: string,
+    typeOfDoc: string
+  ): DocumentProcessor {
+    const checker = `${mimeType}_${typeOfDoc}`;
+    switch (checker) {
+      case "application/pdf_general":
         return new GeneralProcessor();
+      case "application/pdf_invoice":
+        return new InvoiceProcessor();
+      default:
+        throw new Error("Unsupported document type");
     }
-    throw new Error("Unsupported document type");
   }
 
   validateDocument(file: Express.Multer.File) {
