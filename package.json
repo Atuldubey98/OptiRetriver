@@ -12,8 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@langchain/core": "^1.0.2",
-    "@langchain/ollama": "^1.0.0",
+    "axios": "^1.13.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mongoose": "^8.19.2",

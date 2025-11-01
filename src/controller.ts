@@ -1,14 +1,18 @@
 import { Request, Response } from "express";
+import { readFile } from "fs/promises";
 import { DocumentQueryFactory } from "./services/document/document-query";
 import DocumentService from "./services/document/document-service";
 import DocumentProcessingService from "./services/document/document-service-impl";
 import EmbeddingLoaderService from "./services/embedding/embedding-loader-service";
-import { readFile } from "fs/promises";
+import { PromptFactory } from "./services/prompts/prompt-service";
+import CompletionService from "./services/completions/completion-service";
 
 class Controller {
-  private documentService: DocumentService;
+  private readonly documentService: DocumentService;
+  private readonly completionService: CompletionService;
   constructor() {
     this.documentService = new DocumentProcessingService();
+    this.completionService = new CompletionService();
   }
   public getHealth(_: Request, res: Response) {
     return res.send("Hello, World!");
@@ -40,6 +44,12 @@ class Controller {
     return res.send({ message: "File uploaded successfully" });
   }
   public async query(req: Request, res: Response) {
+    const results = await this.getResults(req);
+    return res.json({
+      data: results,
+    });
+  }
+  private async getResults(req: Request) {
     const search = req.query?.search as string;
     const typeOfDoc = (req.query?.type as string) || "general";
     const llmService = EmbeddingLoaderService.loadEmbeddingService("ollama");
@@ -47,9 +57,23 @@ class Controller {
     const documentQueryService =
       DocumentQueryFactory.getDocumentQueryService(typeOfDoc);
     const results = await documentQueryService.query(queryEmbedding, 10);
-    return res.json({
-      data: results,
-    });
+    return results;
+  }
+
+  public async response(req: Request, res: Response) {
+    const results = await this.getResults(req);
+    const typeOfDoc = (req.query?.type as string) || "general";
+
+    const chunks: string[] = results.map(
+      (result: { content: string; score: number }) => result.content
+    );
+    const promptService = PromptFactory.getPromptFactory(typeOfDoc);
+    const prompt = promptService.makePrompt(
+      chunks,
+      req.query?.search as string
+    );
+    const response = await this.completionService.complete(prompt);
+    return res.status(200).json({ data: response });
   }
 }
 

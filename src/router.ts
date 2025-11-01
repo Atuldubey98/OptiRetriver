@@ -14,5 +14,6 @@ router.post(
   controller.upload.bind(controller)
 );
 router.get("/query", controller.query.bind(controller));
+router.get("/response", controller.response.bind(controller));
 
 export default router;

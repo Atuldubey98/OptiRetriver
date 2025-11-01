@@ -1,3 +1,4 @@
-export interface CompletionStrategy{
-    complete(content : string) : string; 
+export interface CompletionStrategy {
+  complete(content: string): Promise<string>;
 }
+
