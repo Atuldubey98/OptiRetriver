@@ -16,6 +16,7 @@ class DocumentService implements IDocumentService {
     chunks,
     fileName,
     description,
+    typeOfDoc = "general",
     embeddingCreateService,
   }: {
     mimeType: string;
@@ -23,6 +24,7 @@ class DocumentService implements IDocumentService {
     description: string;
     embeddings: number[][];
     chunks: string[];
+    typeOfDoc : string,
     embeddingCreateService: IEmbeddingCreateService;
   }) {
     const session = await EntityModel.startSession();
@@ -32,6 +34,7 @@ class DocumentService implements IDocumentService {
           mimeType,
           name: fileName,
           description,
+          type : typeOfDoc,
         });
         await newEntity.save({ session });
         await embeddingCreateService.createEmbeddings(

@@ -12,6 +12,7 @@ interface IDocumentService {
     description: string;
     embeddings: number[][];
     chunks: string[];
+    typeOfDoc : string;
     embeddingCreateService: IEmbeddingCreateService;
   }): Promise<void>;
 }

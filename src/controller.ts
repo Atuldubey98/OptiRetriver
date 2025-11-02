@@ -38,8 +38,10 @@ class Controller {
       description: req.body?.description,
       embeddings,
       chunks,
+      typeOfDoc,
       embeddingCreateService:
         EmbeddingLoaderService.getEmbeddingCreateService(typeOfDoc),
+      
     });
     return res.send({ message: "File uploaded successfully" });
   }
@@ -51,7 +53,7 @@ class Controller {
   }
   private async getResults(req: Request) {
     const search = req.query?.search as string;
-    const typeOfDoc = (req.query?.type as string) || "general";
+    const typeOfDoc = (req.query?.type as string) || "general";    
     const llmService = EmbeddingLoaderService.loadEmbeddingService("ollama");
     const queryEmbedding = await llmService.generateQueryEmbedding(search);
     const documentQueryService =
