@@ -16,6 +16,7 @@ import { useApiCall } from "../../hooks/useApiCall";
 import SearchSection from "./SearchSection";
 import ResultsGrid from "./ResultsGrid";
 import ChatAssistant from "./ChatAssistant";
+import FilterSelect from "./FilterSelect";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
@@ -43,6 +44,7 @@ export default function HomePage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!query) return;
     callApi({
       url: "/query",
       params: { type: filter, search: query },
@@ -56,7 +58,7 @@ export default function HomePage() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("type", uploadFilter);
-      
+
       await postCall({
         url: `/upload?type=${uploadFilter}`,
         method: "POST",
@@ -180,17 +182,10 @@ export default function HomePage() {
                 </IconButton>
               </Box>
             )}
-
-            <TextField
-              select
-              label="Filter Type"
+            <FilterSelect
               value={uploadFilter}
               onChange={(e) => setUploadFilter(e.target.value)}
-              fullWidth
-            >
-              <MenuItem value="general">General</MenuItem>
-              <MenuItem value="invoice">Invoice</MenuItem>
-            </TextField>
+            />
 
             <Button
               type="submit"
@@ -202,7 +197,7 @@ export default function HomePage() {
           </form>
         </Box>
       </Modal>
-      <ChatAssistant/>
+      <ChatAssistant />
     </Box>
   );
 }

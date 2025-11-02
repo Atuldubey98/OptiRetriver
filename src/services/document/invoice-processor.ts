@@ -12,31 +12,32 @@ export class InvoiceProcessor implements DocumentProcessor {
       const results = await pdfParser.getText();
       const text = results.text;
       const llmService = EmbeddingLoaderService.loadResponseService("ollama");
-      const rinsedText = await llmService.complete(`
+     const rinsedText = await llmService.complete(`
 You are a document structuring specialist for business documents such as Invoices, Quotations, and Purchase Orders.
 
-Your goal is to reconstruct clean, structured text from a possibly broken or partial OCR/PDF extraction.
+Your goal is to reconstruct clean, structured text from a possibly broken or partial OCR/PDF extraction, so that it can be easily chunked and used for retrieval or display.
 
 ---
 
 ### TASK
-Read the text and extract:
+Read the input text and extract:
 1. Header Fields — document type, numbers, parties, dates, PO info, totals, taxes, etc.
 2. Line Items — all product/service lines with structured detail.
 3. Terms and Conditions — all listed or descriptive terms, normalized as clear bullet points.
 
-If the text is split or incomplete, extract only what is visible. Do not invent or infer.
+If text is split or incomplete, extract only what is visible. Never infer or guess.
 
 ---
 
 ### RULES
-- Never guess or infer.
-- Always use the same labels and order.
-- Wrap all field values and list items in double quotes ("").
+- Output plain text only (no JSON, Markdown, or explanations).
+- Maintain consistent field names and order.
+- Wrap all values in double quotes ("") for easy parsing.
+- Use bullet points (-) for list data like items and terms.
+- Leave blank values as empty quotes ("").
 - Format all dates as YYYY-MM-DD.
-- Use a clean, indented bullet list format for both Items and Terms & Conditions.
-- Maintain plain text only (no JSON, Markdown, or explanations).
-- If a field or section is missing, output empty quotes ("").
+- Keep structure compact and visually consistent.
+- This text should be clean, semantic, and suitable for chunking.
 
 ---
 
@@ -59,27 +60,24 @@ PO No.: "<po_number>"
 PO Date: "<po_date>"
 
 Items:
-  - "<item_name>", HSN/SAC: "<code>", Qty: "<qty>", Unit: "<unit>", Rate: "<unit_price>", GST: "<gst_percent>", Total: "<amount>"
-  - "<item_name>", HSN/SAC: "<code>", Qty: "<qty>", Unit: "<unit>", Rate: "<unit_price>", GST: "<gst_percent>", Total: "<amount>"
-  - ...
+- "<item_name>", HSN/SAC: "<code>", Qty: "<qty>", Unit: "<unit>", Rate: "<rate>", GST: "<gst>", Total: "<total>"
+- "<item_name>", HSN/SAC: "<code>", Qty: "<qty>", Unit: "<unit>", Rate: "<rate>", GST: "<gst>", Total: "<total>"
 
 Subtotal: "<subtotal>"
-Taxes: "<tax_name amount>"
+Taxes: "<tax_name> <amount>"
 Total: "<total>"
 Currency: "<currency>"
 Payment Terms: "<terms>"
-Bank Details: "<bank_name> <acc_no> <ifsc>"
+Bank Details: "<bank_name> <account_no> <ifsc>"
 
 Terms & Conditions:
-  - "<condition_1>"
-  - "<condition_2>"
-  - "<condition_3>"
-  - "<condition_4>"
-  - "<condition_5>"
-  - ...
+- "<condition_1>"
+- "<condition_2>"
+- "<condition_3>"
+- "<condition_4>"
+- "<condition_5>"
 `);
-
-      return this.textProcessorService.getChunks(rinsedText, 500, 100);
+      return this.textProcessorService.getChunks(rinsedText, 600, 0);
     } catch (error) {
       console.error("Error parsing PDF buffer:", error);
       throw error;

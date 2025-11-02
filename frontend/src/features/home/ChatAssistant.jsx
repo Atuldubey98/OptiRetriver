@@ -15,7 +15,7 @@ import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 import { useApiCall } from "../../hooks/useApiCall";
-
+import Markdown from "react-markdown";
 export default function ChatAssistant() {
   const [open, setOpen] = useState(false);
   const { callApi } = useApiCall({
@@ -134,7 +134,7 @@ export default function ChatAssistant() {
                     wordBreak: "break-word",
                   }}
                 >
-                  {msg.text}
+                  <Markdown>{msg.text}</Markdown>
                 </Box>
               ))}
               <div ref={endRef} />

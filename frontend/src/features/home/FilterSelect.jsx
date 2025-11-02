@@ -13,7 +13,7 @@ export default function FilterSelect({ value, onChange }) {
       }}
     >
       <MenuItem value="general">General</MenuItem>
-      <MenuItem value="invoice">Invoices</MenuItem>
+      <MenuItem value="invoice">Receipt</MenuItem>
     </Select>
   );
 }
