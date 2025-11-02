@@ -10,7 +10,7 @@ const EntitySchema = new Schema(
       type: String,
       required: false,
       default: "general",
-      enum: ["general"],
+      enum: ["general", "invoice"],
     },
   },
   { timestamps: true, collection: "entities" }

@@ -13,46 +13,73 @@ export class InvoiceProcessor implements DocumentProcessor {
       const text = results.text;
       const llmService = EmbeddingLoaderService.loadResponseService("ollama");
       const rinsedText = await llmService.complete(`
-   You are a business document normalizer.
+You are a document structuring specialist for business documents such as Invoices, Quotations, and Purchase Orders.
 
-Your task is to extract and normalize only the important invoice or purchase document details from the text below.  
-The text may be partial or chunked. Extract what’s available and output it in a clean, quoted, line-by-line format.  
-If a field is missing, output it as "" (empty quotes). Do not guess or infer.
+Your goal is to reconstruct clean, structured text from a possibly broken or partial OCR/PDF extraction.
 
-Context:
+---
+
+### TASK
+Read the text and extract:
+1. Header Fields — document type, numbers, parties, dates, PO info, totals, taxes, etc.
+2. Line Items — all product/service lines with structured detail.
+3. Terms and Conditions — all listed or descriptive terms, normalized as clear bullet points.
+
+If the text is split or incomplete, extract only what is visible. Do not invent or infer.
+
+---
+
+### RULES
+- Never guess or infer.
+- Always use the same labels and order.
+- Wrap all field values and list items in double quotes ("").
+- Format all dates as YYYY-MM-DD.
+- Use a clean, indented bullet list format for both Items and Terms & Conditions.
+- Maintain plain text only (no JSON, Markdown, or explanations).
+- If a field or section is missing, output empty quotes ("").
+
+---
+
+### INPUT TEXT
 """
 ${text}
 """
 
-Output Rules:
-- Always include the following fields in the same order.
-- Wrap all values in double quotes ("").
-- Detect and extract "Document Type" (e.g. "Invoice", "Quotation", "Receipt", "Purchase Order", "Tax Invoice").
-- Detect and extract "Document No".
-- Detect all the line items from the Document
-- Extract all relevant details: vendor, customer, date, due date, subtotal, taxes, total, currency, and payment terms.
-- Combine all items into one line, comma-separated.
-- Use plain text only — no explanations, no markdown, no JSON.
-- Dates must be formatted as "YYYY-MM-DD" when possible.
+---
 
-Output Format (exact):
-Document Type: "<type>"  
-Document No.: "<number>"  
-Vendor: "<vendor>"  
-Customer: "<customer>"  
-Date: "<date>"  
-Due Date: "<due_date>"  
-Items: 
-  - <item1 (qty x unit = total), item2 (qty x unit = total)>  
-  - <item2 (qty x unit = total), item2 (qty x unit = total)>
-  -----Till number of items  
-Subtotal: "<subtotal>"  
-Taxes: "<tax_name amount>"  
-Total: "<total>"  
-Currency: "<currency>"  
+### OUTPUT FORMAT (exact)
+
+Document Type: "<type>"
+Document No.: "<number>"
+Vendor: "<vendor>"
+Customer: "<customer>"
+Date: "<date>"
+Due Date: "<due_date>"
+PO No.: "<po_number>"
+PO Date: "<po_date>"
+
+Items:
+  - "<item_name>", HSN/SAC: "<code>", Qty: "<qty>", Unit: "<unit>", Rate: "<unit_price>", GST: "<gst_percent>", Total: "<amount>"
+  - "<item_name>", HSN/SAC: "<code>", Qty: "<qty>", Unit: "<unit>", Rate: "<unit_price>", GST: "<gst_percent>", Total: "<amount>"
+  - ...
+
+Subtotal: "<subtotal>"
+Taxes: "<tax_name amount>"
+Total: "<total>"
+Currency: "<currency>"
 Payment Terms: "<terms>"
-      `);
-      return this.textProcessorService.getChunks(rinsedText, 800, 80);
+Bank Details: "<bank_name> <acc_no> <ifsc>"
+
+Terms & Conditions:
+  - "<condition_1>"
+  - "<condition_2>"
+  - "<condition_3>"
+  - "<condition_4>"
+  - "<condition_5>"
+  - ...
+`);
+
+      return this.textProcessorService.getChunks(rinsedText, 500, 100);
     } catch (error) {
       console.error("Error parsing PDF buffer:", error);
       throw error;

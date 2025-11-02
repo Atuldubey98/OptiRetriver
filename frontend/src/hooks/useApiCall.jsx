@@ -27,6 +27,7 @@ export function useApiCall(initialConfig) {
       const config = { ...initialConfig, ...overrideConfig };
       const response = await api(config);
       setData(response.data.data);
+      return response.data.data;
     } catch (err) {
       const message = err.response?.data?.message || err.message || "Something went wrong";
       setSnackbar({ open: true, message });

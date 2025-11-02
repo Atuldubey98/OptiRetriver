@@ -8,16 +8,18 @@ import {
   Button,
   MenuItem,
   TextField,
+  Select,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloseIcon from "@mui/icons-material/Close";
 import { useApiCall } from "../../hooks/useApiCall";
 import SearchSection from "./SearchSection";
 import ResultsGrid from "./ResultsGrid";
+import ChatAssistant from "./ChatAssistant";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("general");
+  const [filter, setFilter] = useState("invoice");
   const [openModal, setOpenModal] = useState(false);
   const [file, setFile] = useState(null);
   const [uploadFilter, setUploadFilter] = useState("general");
@@ -46,7 +48,6 @@ export default function HomePage() {
       params: { type: filter, search: query },
     });
   };
-
   const handleFileUpload = async (e) => {
     e.preventDefault();
     try {
@@ -55,9 +56,9 @@ export default function HomePage() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("type", uploadFilter);
-
+      
       await postCall({
-        url: "/upload",
+        url: `/upload?type=${uploadFilter}`,
         method: "POST",
         data: formData,
         headers: { "Content-Type": "multipart/form-data" },
@@ -201,6 +202,7 @@ export default function HomePage() {
           </form>
         </Box>
       </Modal>
+      <ChatAssistant/>
     </Box>
   );
 }
