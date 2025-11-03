@@ -20,7 +20,7 @@ import FilterSelect from "./FilterSelect";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("invoice");
+  const [filter, setFilter] = useState("general");
   const [openModal, setOpenModal] = useState(false);
   const [file, setFile] = useState(null);
   const [uploadFilter, setUploadFilter] = useState("general");
@@ -190,6 +190,7 @@ export default function HomePage() {
             <Button
               type="submit"
               variant="contained"
+              loading={uploading}
               disabled={!file || uploading}
             >
               {uploading ? "Uploading..." : "Upload"}

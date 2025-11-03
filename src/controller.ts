@@ -55,6 +55,7 @@ class Controller {
     const search = req.query?.search as string;
     const typeOfDoc = (req.query?.type as string) || "general";    
     const llmService = EmbeddingLoaderService.loadEmbeddingService("ollama");
+    
     const queryEmbedding = await llmService.generateQueryEmbedding(search);
     const documentQueryService =
       DocumentQueryFactory.getDocumentQueryService(typeOfDoc);

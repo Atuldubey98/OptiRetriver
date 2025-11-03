@@ -16,6 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 import { useApiCall } from "../../hooks/useApiCall";
 import Markdown from "react-markdown";
+import FilterSelect from './FilterSelect';
 export default function ChatAssistant() {
   const [open, setOpen] = useState(false);
   const { callApi } = useApiCall({
@@ -78,8 +79,8 @@ export default function ChatAssistant() {
             position: "fixed",
             bottom: isMobile ? 0 : 80,
             right: isMobile ? 0 : 24,
-            width: isMobile ? "100%" : 380,
-            height: isMobile ? "100vh" : 500,
+            width: isMobile ? "100%" : 400,
+            height: isMobile ? "100vh" : 600,
             borderRadius: isMobile ? 0 : 3,
             display: "flex",
             flexDirection: "column",

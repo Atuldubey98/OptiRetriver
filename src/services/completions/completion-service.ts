@@ -7,4 +7,5 @@ export default class CompletionService{
     const response = await completionService.complete(prompt);
     return response;
    }
+   
 }
