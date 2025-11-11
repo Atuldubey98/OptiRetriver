@@ -1,14 +1,64 @@
+import path from "path";
 import EntityModel from "../../models/entity-model";
 import TextProcessingService from "../chunk/text-processor-service";
 import { IEmbeddingCreateService } from "../embedding/embedding-create";
 import IDocumentService from "./document-service";
 import GeneralProcessor from "./general-processor";
 import { InvoiceProcessor } from "./invoice-processor";
+import GeneralModel from "../../models/general-model";
+import InvoiceModel from "../../models/invoice-model";
+import mongoose, { Model } from "mongoose";
 
 class DocumentService implements IDocumentService {
   private textProcessorService: TextProcessingService;
   constructor() {
     this.textProcessorService = new TextProcessingService();
+  }
+  downlaod(filename: string, type: string): string {
+    const safePath = path.normalize(
+      path.join(path.join("uploads", type, filename))
+    );
+    return safePath;
+  }
+  async deleteDocs(entitities: { _id: string; type: string }[]) {
+    let deleted = [];
+    for (const entity of entitities) {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      try {
+        await EntityModel.deleteOne({ _id: entity._id }, { session });
+        if (entity.type === "invoice") {
+          await InvoiceModel.deleteMany({ entity: entity._id }, { session });
+        }
+        if (entity.type === "general") {
+          await GeneralModel.deleteMany({ entity: entity._id }, { session });
+        }
+        await session.commitTransaction();
+        session.endSession();
+        deleted.push(entity._id);
+      } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+      }
+    }
+    return deleted;
+  }
+  async getFiles(): Promise<any> {
+    try {
+      const entities = await EntityModel.aggregate([
+        {
+          $addFields: {
+            path: {
+              $concat: ["/", "$type", "/", "$name"],
+            },
+          },
+        },
+      ]);
+      return entities;
+    } catch (error) {
+      throw error;
+    }
   }
   async uploadDocument({
     mimeType,
@@ -24,7 +74,7 @@ class DocumentService implements IDocumentService {
     description: string;
     embeddings: number[][];
     chunks: string[];
-    typeOfDoc : string,
+    typeOfDoc: string;
     embeddingCreateService: IEmbeddingCreateService;
   }) {
     const session = await EntityModel.startSession();
@@ -34,7 +84,7 @@ class DocumentService implements IDocumentService {
           mimeType,
           name: fileName,
           description,
-          type : typeOfDoc,
+          type: typeOfDoc,
         });
         await newEntity.save({ session });
         await embeddingCreateService.createEmbeddings(

@@ -41,7 +41,6 @@ class Controller {
       typeOfDoc,
       embeddingCreateService:
         EmbeddingLoaderService.getEmbeddingCreateService(typeOfDoc),
-      
     });
     return res.send({ message: "File uploaded successfully" });
   }
@@ -53,12 +52,31 @@ class Controller {
   }
   private async getResults(req: Request) {
     const search = req.query?.search as string;
-    const typeOfDoc = (req.query?.type as string) || "general";    
-    const llmService = EmbeddingLoaderService.loadEmbeddingService("ollama");
     
+   const typeOfDoc = await this.completionService.complete(`
+You are a strict text classifier.
+
+Classify the user's message into one of two categories:
+
+1. invoice — if the message talks about invoice, bill, quotation, receipt, purchase order, or payment.  
+2. general — for anything else.
+
+Reply with only one word: either invoice or general.  
+Never explain or add any other text.  
+If you start to explain, stop immediately and output only the single word.
+
+Message: ${req.query?.search}
+
+Final Answer (one word only):
+`);
+
+  
+    
+    const llmService = EmbeddingLoaderService.loadEmbeddingService("ollama");
+
     const queryEmbedding = await llmService.generateQueryEmbedding(search);
     const documentQueryService =
-      DocumentQueryFactory.getDocumentQueryService(typeOfDoc);
+      DocumentQueryFactory.getDocumentQueryService(typeOfDoc.trim().toLocaleLowerCase());
     const results = await documentQueryService.query(queryEmbedding, 10);
     return results;
   }
@@ -77,6 +95,25 @@ class Controller {
     );
     const response = await this.completionService.complete(prompt);
     return res.status(200).json({ data: response });
+  }
+  public async getFiles(_: Request, res: Response) {
+    const entities = await this.documentService.getFiles();
+    return res.status(200).json({ data: entities });
+  }
+  public async download(req: Request, res: Response) {
+    const path = this.documentService.downlaod(
+      req.params?.filename,
+      req.params?.type
+    );
+    return res.status(200).json({
+      data: path,
+    });
+  }
+  public async deleteDocs(req: Request, res: Response) {
+    const deleted = await this.documentService.deleteDocs(req.body);
+    return res.status(200).json({
+      data: deleted,
+    });
   }
 }
 

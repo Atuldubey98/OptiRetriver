@@ -7,7 +7,7 @@ class OllamaCompletionStrategy implements CompletionStrategy {
 
   constructor(model: string) {
     this.mcp = axios.create({
-      baseURL: "http://localhost:11434",
+      baseURL: "http://192.168.1.38:11434",
     });
     this.model = model;
   }

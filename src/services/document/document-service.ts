@@ -2,10 +2,13 @@ import { IEmbeddingCreateService } from "../embedding/embedding-create";
 
 interface IDocumentService {
   validateDocument(file: Express.Multer.File): { mimeType: string };
+  getFiles() : Promise<any[]>;
+  downlaod(filename : string, type : string) : string;
   loadDocumentProccessor(
     mimeType: string,
     typeOfDoc: string
   ): DocumentProcessor;
+  deleteDocs(props : {_id : string; type : string}[]) : Promise<string[]>; 
   uploadDocument(props: {
     mimeType: string;
     fileName: string;

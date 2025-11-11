@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   CircularProgress,
@@ -6,9 +6,8 @@ import {
   IconButton,
   Typography,
   Button,
-  MenuItem,
-  TextField,
-  Select,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloseIcon from "@mui/icons-material/Close";
@@ -17,6 +16,7 @@ import SearchSection from "./SearchSection";
 import ResultsGrid from "./ResultsGrid";
 import ChatAssistant from "./ChatAssistant";
 import FilterSelect from "./FilterSelect";
+import ListResultsGrid from "./ListResultsGrid";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
@@ -24,23 +24,26 @@ export default function HomePage() {
   const [openModal, setOpenModal] = useState(false);
   const [file, setFile] = useState(null);
   const [uploadFilter, setUploadFilter] = useState("general");
+  const [tabValue, setTabValue] = useState(0);
 
   const {
-    data = [],
+    data: results = [],
     loading,
     callApi,
     SnackbarElement,
-  } = useApiCall({
-    method: "GET",
-  });
+  } = useApiCall({ method: "GET" });
+
+  const {
+    data: list,
+    loading: listLoading,
+    callApi: callListApi,
+  } = useApiCall({ method: "GET" });
 
   const {
     callApi: postCall,
     loading: uploading,
     SnackbarElement: UploadSnackBar,
-  } = useApiCall({
-    method: "POST",
-  });
+  } = useApiCall({ method: "POST" });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -49,7 +52,9 @@ export default function HomePage() {
       url: "/query",
       params: { type: filter, search: query },
     });
+    setTabValue(0);
   };
+
   const handleFileUpload = async (e) => {
     e.preventDefault();
     try {
@@ -65,6 +70,8 @@ export default function HomePage() {
         data: formData,
         headers: { "Content-Type": "multipart/form-data" },
       });
+
+      callListApi({ url: `/list` });
       setFile(null);
     } catch (error) {
       throw error;
@@ -73,11 +80,11 @@ export default function HomePage() {
     }
   };
 
-  const handleRemoveFile = () => {
-    setFile(null);
-  };
+  useEffect(() => {
+    callListApi({ url: `/list` });
+  }, []);
 
-  const results = Array.isArray(data) ? data : Object.values(data || {});
+  const handleRemoveFile = () => setFile(null);
 
   return (
     <Box
@@ -99,7 +106,6 @@ export default function HomePage() {
           onQueryChange={(e) => setQuery(e.target.value)}
           onFilterChange={(e) => setFilter(e.target.value)}
         />
-
         <IconButton color="primary" onClick={() => setOpenModal(true)}>
           <UploadFileIcon />
         </IconButton>
@@ -107,12 +113,47 @@ export default function HomePage() {
 
       {SnackbarElement}
 
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
+      {/* Tabs */}
+      <Box sx={{ width: "100%", mt: 3 }}>
+        <Tabs
+          value={tabValue}
+          onChange={(e, val) => setTabValue(val)}
+          centered
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab label="Search Results" />
+          <Tab label="Uploaded Documents" />
+        </Tabs>
+      </Box>
+
+      {/* Tab Content */}
+      {tabValue === 0 && (
+        <Box sx={{ width: "100%", mt: 2 }}>
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <ResultsGrid results={results || []} search={query} />
+          )}
         </Box>
-      ) : (
-        <ResultsGrid results={results} search={query} />
+      )}
+
+      {tabValue === 1 && (
+        <Box sx={{ width: "100%", mt: 2 }}>
+          {listLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Box maxWidth={"95%"} margin={"auto"}>
+              <ListResultsGrid results={list || []} onDeleted={()=>{
+                callListApi({ url: `/list` });
+              }}/>
+            </Box>
+          )}
+        </Box>
       )}
 
       {/* Upload Modal */}
@@ -182,6 +223,7 @@ export default function HomePage() {
                 </IconButton>
               </Box>
             )}
+
             <FilterSelect
               value={uploadFilter}
               onChange={(e) => setUploadFilter(e.target.value)}
@@ -190,7 +232,6 @@ export default function HomePage() {
             <Button
               type="submit"
               variant="contained"
-              loading={uploading}
               disabled={!file || uploading}
             >
               {uploading ? "Uploading..." : "Upload"}
@@ -198,6 +239,7 @@ export default function HomePage() {
           </form>
         </Box>
       </Modal>
+
       <ChatAssistant />
     </Box>
   );

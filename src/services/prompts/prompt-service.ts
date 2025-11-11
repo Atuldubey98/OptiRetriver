@@ -14,6 +14,7 @@ export class PromptFactory {
     }
   }
 }
+
 export  class GeneralDocPrompt implements PromptService {
   makePrompt(chunks: string[], question: string): string {
     const context = chunks.join("\n\n");

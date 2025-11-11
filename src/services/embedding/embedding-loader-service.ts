@@ -22,7 +22,7 @@ class EmbeddingLoaderService {
     llmServiceStr?: string
   ): CompletionStrategy {
     if (llmServiceStr === "ollama") {
-      return new OllamaCompletionStrategy("gemma3:1b");
+      return new OllamaCompletionStrategy("phi3");
     }
     throw new Error(`LLM Service ${llmServiceStr} not supported`);
   }
